@@ -272,18 +272,18 @@
         
         <div class="input-group">
             <label for="urlInput">蓝奏云分享链接：</label>
-            <input type="text" id="urlInput" value="https://viphook.lanzoub.com/i7nZM3baag5g">
+            <input type="text" id="urlInput" placeholder="请输入分享链接" value="">
         </div>
         
         <div class="input-group">
             <label for="pwdInput">提取码：</label>
-            <input type="text" id="pwdInput" placeholder="请输入提取码" value="6666">
+            <input type="text" id="pwdInput" placeholder="请输入提取码(如果没有,则不用填)" value="">
         </div>
         
         <div class="input-group">
             <label for="typeInput">类型：</label>
             <input type="text" id="typeInput" value="down">
-            <div class="format-hint">支持：down（下载）、json（JSON格式）、xml（XML格式）</div>
+            <div class="format-hint">支持：文件夹解析、down（下载）、json（JSON格式）、xml（XML格式）、永久链接: http://flexhook.eu.org/lzy/?url=链接&p=密码(没有则不填)&type=down</div>
         </div>
         
         <button id="parseBtn">解析链接</button>
@@ -390,7 +390,7 @@
             // 调用API
             function callLzyApi(url, pwd, type) {
                 // 构建请求URL
-                let apiUrl = './lzy/?url=' + encodeURIComponent(url);
+                let apiUrl = 'http://flexhook.eu.org/lzy/?url=' + encodeURIComponent(url);
                 let text = "下载";
                 
                 // 只有当提取码不为空时才添加p参数
