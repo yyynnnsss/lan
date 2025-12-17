@@ -3,259 +3,773 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>云盘直链解析</title>
-    <link rel="stylesheet" href="style.css">
+    <title>蓝奏云链接解析工具</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            margin-top: 0;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin: 15px 0 25px;
+            font-weight: 600;
+            font-size: 22px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 16px;
+        }
+        input {
+            width: 100%;
+            padding: 14px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f9f9f9;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #3a7bc8;
+        }
+        button:disabled {
+            background: #a0a0a0;
+            cursor: not-allowed;
+        }
+        
+        /* 数据显示区域样式优化 */
+        .data-container {
+            position: relative;
+            margin: 10px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+        }
+        .data-display {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            background: #1a1a1a;
+            color: #e2e8f0;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 8px 8px 0 0;
+        }
+        .data-display::-webkit-scrollbar {
+            width: 8px;
+        }
+        .data-display::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+        .data-display::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        .data-display::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+        .data-actions {
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 0 0 8px 8px;
+            border-top: 1px solid #444;
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            padding: 12px;
+            background: #fadbd8;
+            border-radius: 8px;
+            display: none;
+            font-size: 14px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #4a90e2;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .success-message {
+            color: #27ae60;
+            margin-top: 10px;
+            padding: 12px;
+            background: #d5f4e6;
+            border-radius: 8px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        /* 文件列表样式 */
+        .file-list-container {
+            margin-top: 25px;
+            display: none;
+        }
+        .file-list-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .file-info {
+            flex: 1;
+        }
+        .file-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .file-meta {
+            display: flex;
+            font-size: 14px;
+            color: #718096;
+        }
+        .file-size, .file-time {
+            margin-right: 15px;
+        }
+        .download-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .download-btn:hover {
+            background: #229954;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+            padding: 15px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .download-btn {
+                margin-top: 10px;
+                width: 100%;
+            }
+            .file-meta {
+                flex-direction: column;
+            }
+            .file-size, .file-time {
+                margin-bottom: 5px;
+            }
+        }
+        
+        /* 标签页样式 */
+        .tabs {
+            display: flex;
+            margin-top: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            border-bottom: 2px solid #4a90e2;
+            color: #4a90e2;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 格式提示 */
+        .format-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-    <div class="tech-background">
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
-                    <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(59, 130, 246, 0.1)" stroke-width="1"/>
-                </pattern>
-                <pattern id="dots" width="50" height="50" patternUnits="userSpaceOnUse">
-                    <circle cx="25" cy="25" r="1" fill="rgba(16, 185, 129, 0.2)"/>
-                </pattern>
-                <linearGradient id="techGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:rgba(59, 130, 246, 0.05);stop-opacity:1" />
-                    <stop offset="50%" style="stop-color:rgba(16, 185, 129, 0.03);stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:rgba(139, 92, 246, 0.05);stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            
-            <rect width="100%" height="100%" fill="url(#grid)" />
-            <rect width="100%" height="100%" fill="url(#dots)" />
-            <rect width="100%" height="100%" fill="url(#techGradient)" />
-            
-            <g opacity="0.1">
-                <path d="M0,100 Q250,50 500,100 T1000,100" stroke="rgba(59, 130, 246, 0.3)" stroke-width="2" fill="none">
-                    <animate attributeName="d" dur="10s" repeatCount="indefinite" 
-                             values="M0,100 Q250,50 500,100 T1000,100;M0,120 Q250,80 500,120 T1000,120;M0,100 Q250,50 500,100 T1000,100"/>
-                </path>
-                <path d="M0,200 Q300,150 600,200 T1200,200" stroke="rgba(16, 185, 129, 0.3)" stroke-width="2" fill="none">
-                    <animate attributeName="d" dur="12s" repeatCount="indefinite" 
-                             values="M0,200 Q300,150 600,200 T1200,200;M0,180 Q300,130 600,180 T1200,180;M0,200 Q300,150 600,200 T1200,200"/>
-                </path>
-                <path d="M0,300 Q400,250 800,300 T1600,300" stroke="rgba(139, 92, 246, 0.3)" stroke-width="2" fill="none">
-                    <animate attributeName="d" dur="15s" repeatCount="indefinite" 
-                             values="M0,300 Q400,250 800,300 T1600,300;M0,320 Q400,270 800,320 T1600,320;M0,300 Q400,250 800,300 T1600,300"/>
-                </path>
-            </g>
-            
-            <g opacity="0.15">
-                <circle cx="200" cy="150" r="3" fill="rgba(59, 130, 246, 0.6)">
-                    <animate attributeName="r" dur="3s" repeatCount="indefinite" values="3;6;3"/>
-                    <animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0.6;0.2;0.6"/>
-                </circle>
-                <circle cx="600" cy="250" r="3" fill="rgba(16, 185, 129, 0.6)">
-                    <animate attributeName="r" dur="4s" repeatCount="indefinite" values="3;5;3"/>
-                    <animate attributeName="opacity" dur="4s" repeatCount="indefinite" values="0.6;0.3;0.6"/>
-                </circle>
-                <circle cx="1000" cy="180" r="3" fill="rgba(139, 92, 246, 0.6)">
-                    <animate attributeName="r" dur="5s" repeatCount="indefinite" values="3;7;3"/>
-                    <animate attributeName="opacity" dur="5s" repeatCount="indefinite" values="0.6;0.1;0.6"/>
-                </circle>
-            </g>
-        </svg>
+    <div class="container">
+        <h1>蓝奏云链接解析工具</h1>
         
-        <div class="tech-pattern"></div>
+        <div class="input-group">
+            <label for="urlInput">蓝奏云分享链接：</label>
+            <input type="text" id="urlInput" value="https://viphook.lanzoub.com/i7nZM3baag5g">
+        </div>
         
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-            <div class="shape shape-4"></div>
-            <div class="shape shape-5"></div>
+        <div class="input-group">
+            <label for="pwdInput">提取码：</label>
+            <input type="text" id="pwdInput" placeholder="请输入提取码" value="6666">
+        </div>
+        
+        <div class="input-group">
+            <label for="typeInput">类型：</label>
+            <input type="text" id="typeInput" value="down">
+            <div class="format-hint">支持：down（下载）、json（JSON格式）、xml（XML格式）</div>
+        </div>
+        
+        <button id="parseBtn">解析链接</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在解析链接，请稍候...</p>
+        </div>
+        
+        <div class="error" id="errorMsg"></div>
+        <div class="success-message" id="successMsg"></div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="files">文件列表</div>
+            <div class="tab" data-tab="data">响应数据</div>
+        </div>
+        
+        <div class="tab-content active" id="filesTab">
+            <div class="file-list-container" id="fileListContainer">
+                <div id="fileList"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="dataTab">
+            <div class="data-container" id="dataContainer">
+                <div class="data-display" id="dataDisplay"></div>
+                <div class="data-actions">
+                    <button class="copy-btn" id="copyBtn">复制数据</button>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <div class="footer">
+        <p>注意：本页面仅用于技术演示</p>
+    </div>
 
-    <div class="layout">
-        <button class="mobile-menu-btn" onclick="toggleSidebar()">
-            <svg data-lucide="menu" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-        </button>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const urlInput = document.getElementById('urlInput');
+            const pwdInput = document.getElementById('pwdInput');
+            const typeInput = document.getElementById('typeInput');
+            const parseBtn = document.getElementById('parseBtn');
+            const loading = document.getElementById('loading');
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+            const dataContainer = document.getElementById('dataContainer');
+            const dataDisplay = document.getElementById('dataDisplay');
+            const copyBtn = document.getElementById('copyBtn');
+            const fileListContainer = document.getElementById('fileListContainer');
+            const fileList = document.getElementById('fileList');
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // 标签页切换
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // 更新活动标签
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // 显示对应内容
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === tabId + 'Tab') {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // 解析按钮点击事件
+            parseBtn.addEventListener('click', function() {
+                const url = urlInput.value.trim();
+                const pwd = pwdInput.value.trim();
+                const type = typeInput.value.trim();
+                
+                // 验证输入
+                if (!url) {
+                    showError('请输入蓝奏云分享链接');
+                    return;
+                }
+                
+                if (!url.includes('lanzou')) {
+                    showError('请输入正确的蓝奏云链接');
+                    return;
+                }
+                                
+                // 重置状态
+                hideError();
+                hideSuccess();
+                fileListContainer.style.display = 'none';
+                dataContainer.style.display = 'none';
+                loading.style.display = 'block';
+                parseBtn.disabled = true;
+                
+                // 调用API
+                callLzyApi(url, pwd, type);
+            });
+            
+            // 调用API
+            function callLzyApi(url, pwd, type) {
+                // 构建请求URL
+                let apiUrl = './lzy/?url=' + encodeURIComponent(url);
+                let text = "下载";
+                
+                // 只有当提取码不为空时才添加p参数
+                if (pwd && pwd.trim()) {
+                    apiUrl += '&p=' + encodeURIComponent(pwd);
+                }
+                
+                // 处理type参数
+                let responseType = 'json'; // 默认响应类型
+                if (type && type.trim()) {
+                    const typeLower = type.trim().toLowerCase();
+                    if (typeLower === 'down') {
+                        apiUrl += '&type=downAll';
+                        text = "下载";
+                    } else if (typeLower === 'json') {
+                        apiUrl += '&type=json';
+                        text = "查看";
+                        responseType = 'json';
+                    } else if (typeLower === 'xml') {
+                        apiUrl += '&type=xml';
+                        text = "查看";
+                        responseType = 'xml';
+                    } else {
+                        // 默认处理
+                        apiUrl += '&type=' + encodeURIComponent(type);
+                        text = "查看";
+                    }
+                }
 
-        <div class="sidebar" id="sidebar">
-            <div class="user-card">
-                <div class="user-avatar">
-                    <svg data-lucide="user" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <div class="user-name">开发者</div>
-                <div class="user-title">全栈工程师 & 开源爱好者</div>
-                <div class="user-contacts">
-                    <div class="contact-item" onclick="openContact('qq')" title="QQ联系">
-                        <svg data-lucide="message-circle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
-                    </div>
-                    <div class="contact-item" onclick="openContact('github')" title="GitHub">
-                        <svg data-lucide="github" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
-                    </div>
-                    <div class="contact-item" onclick="openContact('email')" title="邮箱">
-                        <svg data-lucide="mail" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
-                    </div>
-                    <div class="contact-item" onclick="openContact('telegram')" title="Telegram">
-                        <svg data-lucide="send" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="greeting-card" id="greetingCard">
-                <div class="greeting-header">
-                    <div class="greeting-title" id="greetingTitle">
-                        <svg data-lucide="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                        <span>早晚问候</span>
-                    </div>
-                </div>
-                <div class="greeting-body">
-                    <div class="greeting-icon" id="greetingIcon">🌅</div>
-                    <div class="greeting-text" id="greetingText">早上好！</div>
-                    <div class="greeting-time" id="greetingTime">愿您有美好的一天</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="container">
-                <div class="header">
-                    <h1>
-                        <svg data-lucide="download" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                        云盘直链解析
-                    </h1>
-                    <p>高效文件解析服务，快速获取网盘直链</p>
-                </div>
-
-                <div class="notice-card">
-                    <div class="notice-header">
-                        <svg data-lucide="alert-triangle" class="notice-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="m12 17 .01 0"/></svg>
-                        <span class="notice-title">使用须知</span>
-                    </div>
-                    <div class="notice-grid">
-                        <div class="notice-item">
-                            <svg data-lucide="clock" class="notice-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-                            <div class="notice-item-text">
-                                解析速度已优化，采用多节点算法提升国内访问速度
-                            </div>
-                        </div>
-                        <div class="notice-item">
-                            <svg data-lucide="check-circle" class="notice-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
-                            <div class="notice-item-text">
-                                支持解析：123云盘、蓝奏云、小飞机网盘、蓝奏云优享版等主流网盘
-                            </div>
-                        </div>
-                        <div class="notice-item">
-                            <svg data-lucide="shield-check" class="notice-item-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
-                            <div class="notice-item-text">
-                                本服务仅供学习交流，请确保链接有效且合规使用
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="main-card">
-                    <div class="card-header">
-                        <h2 class="card-title">智能解析引擎</h2>
-                        <p class="card-subtitle">输入网盘链接，基于数学算法快速获取直链地址</p>
-                    </div>
-                    <div class="card-body">
-                        <form id="parseForm">
-                            <input type="hidden" id="linkType" name="linkType" value="">
-                            <div class="form-group">
-                                <label class="form-label" for="url">
-                                    <svg data-lucide="link" class="form-label-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                                    网盘链接
-                                </label>
-                                <input type="url" id="url" name="url" class="form-input" 
-                                       placeholder="请输入需要解析的网盘链接" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="pwd">
-                                    <svg data-lucide="lock" class="form-label-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                    提取密码 (可选)
-                                </label>
-                                <input type="text" id="pwd" name="pwd" class="form-input" 
-                                       placeholder="如果有提取密码请输入，没有可留空">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <svg data-lucide="file-text" class="form-label-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><line x1="10" x2="16" y1="13" y2="13"/><line x1="10" x2="16" y1="17" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
-                                    返回格式
-                                </label>
-                                <div class="format-selector">
-                                    <button type="button" class="format-option" data-format="json">
-                                        <svg data-lucide="code" class="format-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
-                                        JSON格式
-                                    </button>
+                fetch(apiUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('网络响应不正常');
+                        }
+                        
+                        // 根据响应内容类型判断是JSON还是XML
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('xml')) {
+                            return response.text().then(text => ({ type: 'xml', data: text }));
+                        } else {
+                            return response.json().then(data => ({ type: 'json', data: data }));
+                        }
+                    })
+                    .then(result => {
+                        console.log('API响应类型:', result.type);
+                        console.log('API响应数据:', result.data);
+                        
+                        // 处理响应数据
+                        processApiResponse(result.data, result.type, text);
+                    })
+                    .catch(error => {
+                        console.error('请求出错:', error);
+                        showError('请求失败: ' + error.message);
+                        loading.style.display = 'none';
+                        parseBtn.disabled = false;
+                    });
+            }
+            
+            // 处理API响应
+            function processApiResponse(data, dataType, text) {
+                // 显示响应数据
+                if (dataType === 'xml') {
+                    dataDisplay.textContent = formatXml(data);
+                    // 更新标签页标题
+                    document.querySelector('.tab[data-tab="data"]').textContent = 'XML数据';
+                } else {
+                    dataDisplay.textContent = JSON.stringify(data, null, 2);
+                    // 更新标签页标题
+                    document.querySelector('.tab[data-tab="data"]').textContent = 'JSON数据';
+                }
+                dataContainer.style.display = 'block';
+                
+                // 判断响应类型并处理
+                if (dataType === 'xml') {
+                    processXmlResponse(data, text);
+                } else {
+                    processJsonResponse(data, text);
+                }
+                
+                loading.style.display = 'none';
+                parseBtn.disabled = false;
+            }
+            
+            // 处理JSON响应
+            function processJsonResponse(data, text) {
+                if (data.code === 200) {
+                    if (data.data.list && data.data.list.length > 0) {
+                        // 文件夹类型
+                        processJsonFolderData(data, text);
+                    } else {
+                        // 单文件类型
+                        processJsonSingleFileData(data);
+                    }
+                    
+                    showSuccess('解析完成');
+                } else {
+                    showError('解析失败: ' + (data.msg || '未知错误'));
+                }
+            }
+            
+            // 处理XML响应
+            function processXmlResponse(xmlString, text) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+                    const codeElement = xmlDoc.getElementsByTagName("code")[0];
+                    
+                    if (codeElement && codeElement.textContent === "200") {
+                        // 检查是文件夹还是单文件
+                        const listElement = xmlDoc.getElementsByTagName("list")[0];
+                        
+                        if (listElement) {
+                            // 文件夹类型
+                            processXmlFolderData(xmlDoc, text);
+                        } else {
+                            // 单文件类型
+                            processXmlSingleFileData(xmlDoc);
+                        }
+                        
+                        showSuccess('解析完成');
+                    } else {
+                        const msgElement = xmlDoc.getElementsByTagName("msg")[0];
+                        showError('解析失败: ' + (msgElement ? msgElement.textContent : '未知错误'));
+                    }
+                } catch (error) {
+                    console.error('XML解析错误:', error);
+                    showError('XML解析失败: ' + error.message);
+                }
+            }
+            
+            // 处理JSON文件夹数据
+            function processJsonFolderData(data, text) {
+                // 显示文件列表
+                fileListContainer.style.display = 'block';
+                fileList.innerHTML = '';
+                
+                if (data.data.list && data.data.list.length > 0) {
+                    data.data.list.forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        fileItem.innerHTML = `
+                            <div class="file-info">
+                                <div class="file-name">${file.name}</div>
+                                <div class="file-meta">
+                                    <span class="file-size">大小: ${file.size}</span>
+                                    <span class="file-time">时间: ${file.time}</span>
                                 </div>
                             </div>
-
-                            <div class="btn-group">
-                                <button type="submit" class="btn btn-primary">
-                                    <svg data-lucide="play" class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6,3 20,12 6,21 6,3"/></svg>
-                                    开始解析
-                                </button>
-                                <button type="button" class="btn btn-secondary" onclick="clearForm()">
-                                    <svg data-lucide="refresh-cw" class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-                                    重置
-                                </button>
+                            <button class="download-btn" data-url="${file.url || file.id}">${text}</button>
+                        `;
+                        
+                        fileList.appendChild(fileItem);
+                    });
+                    
+                    // 添加下载按钮事件
+                    document.querySelectorAll('.download-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const downloadUrl = this.getAttribute('data-url');
+                            window.open(downloadUrl, '_blank');
+                        });
+                    });
+                }
+            }
+            
+            // 处理JSON单文件数据
+            function processJsonSingleFileData(data) {
+                // 显示文件列表
+                fileListContainer.style.display = 'block';
+                fileList.innerHTML = '';
+                
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">${data.data.name}</div>
+                        <div class="file-meta">
+                            <span class="file-size">大小: ${data.data.size}</span>
+                            <span class="file-time">时间: ${data.data.time}</span>
+                        </div>
+                    </div>
+                    <button class="download-btn" data-url="${data.data.url}">下载</button>
+                `;
+                
+                fileList.appendChild(fileItem);
+                
+                // 添加下载按钮事件
+                document.querySelector('.download-btn').addEventListener('click', function() {
+                    const downloadUrl = this.getAttribute('data-url');
+                    window.open(downloadUrl, '_blank');
+                });
+            }
+            
+            // 处理XML文件夹数据
+            function processXmlFolderData(xmlDoc, text) {
+                // 显示文件列表
+                fileListContainer.style.display = 'block';
+                fileList.innerHTML = '';
+                
+                const items = xmlDoc.getElementsByTagName("item");
+                
+                if (items.length > 0) {
+                    for (let i = 0; i < items.length; i++) {
+                        const item = items[i];
+                        const name = getXmlElementText(item, "name");
+                        const size = getXmlElementText(item, "size");
+                        const time = getXmlElementText(item, "time");
+                        const id = getXmlElementText(item, "id");
+                        
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        fileItem.innerHTML = `
+                            <div class="file-info">
+                                <div class="file-name">${name}</div>
+                                <div class="file-meta">
+                                    <span class="file-size">大小: ${size}</span>
+                                    <span class="file-time">时间: ${time}</span>
+                                </div>
                             </div>
-                        </form>
-
-                        <div class="loading" id="loading">
-                            <div class="spinner"></div>
-                            <p style="color: var(--gray-600); font-weight: 500; margin-bottom: 0;">正在解析中，请稍候...</p>
-                            <div class="status-indicator" id="statusIndicator">
-                                <svg data-lucide="clock" class="status-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-                                <span id="statusText">正在尝试解析...</span>
-                            </div>
+                            <button class="download-btn" data-url="${id}">${text}</button>
+                        `;
+                        
+                        fileList.appendChild(fileItem);
+                    }
+                    
+                    // 添加下载按钮事件
+                    document.querySelectorAll('.download-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const downloadUrl = this.getAttribute('data-url');
+                            window.open(downloadUrl, '_blank');
+                        });
+                    });
+                }
+            }
+            
+            // 处理XML单文件数据
+            function processXmlSingleFileData(xmlDoc) {
+                // 显示文件列表
+                fileListContainer.style.display = 'block';
+                fileList.innerHTML = '';
+                
+                const dataElement = xmlDoc.getElementsByTagName("data")[0];
+                const name = getXmlElementText(dataElement, "name");
+                const size = getXmlElementText(dataElement, "size");
+                const time = getXmlElementText(dataElement, "time");
+                const url = getXmlElementText(dataElement, "url");
+                
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">${name}</div>
+                        <div class="file-meta">
+                            <span class="file-size">大小: ${size}</span>
+                            <span class="file-time">时间: ${time}</span>
                         </div>
                     </div>
-                </div>
-
-                <div class="result-section" id="resultSection">
-                    <div class="result-header" id="resultHeader">
-                        <svg data-lucide="check-circle" class="result-header-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
-                        <span class="result-title">解析完成</span>
-                    </div>
-                    <div class="result-content" id="resultContent"></div>
-                    <div class="result-actions">
-                        <button class="action-btn btn-download" onclick="downloadFile()" id="downloadBtn">
-                            <svg data-lucide="download" class="action-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                            立即下载
-                        </button>
-                        <button class="action-btn btn-copy" onclick="copyDirectLink()" id="copyBtn">
-                            <svg data-lucide="copy" class="action-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                            复制直链
-                        </button>
-                    </div>
-                </div>
-
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon">
-                            <svg data-lucide="zap" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
-                        </div>
-                        <h3>算法优化</h3>
-                        <p>基于高等数学算法，采用多节点轮询技术，智能选择最优解析路径，提供毫秒级响应速度</p>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">
-                            <svg data-lucide="shield" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
-                        </div>
-                        <h3>安全可靠</h3>
-                        <p>企业级安全保障，采用加密传输协议，严格保护用户隐私和数据安全，符合行业标准</p>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">
-                            <svg data-lucide="globe" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
-                        </div>
-                        <h3>多平台支持</h3>
-                        <p>目前支持:<br>123云盘、蓝奏云、蓝奏云优享版、小飞机网盘</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="index.js"></script>
+                    <button class="download-btn" data-url="${url}">下载</button>
+                `;
+                
+                fileList.appendChild(fileItem);
+                
+                // 添加下载按钮事件
+                document.querySelector('.download-btn').addEventListener('click', function() {
+                    const downloadUrl = this.getAttribute('data-url');
+                    window.open(downloadUrl, '_blank');
+                });
+            }
+            
+            // 辅助函数：获取XML元素文本
+            function getXmlElementText(parent, tagName) {
+                const elements = parent.getElementsByTagName(tagName);
+                return elements.length > 0 ? elements[0].textContent : '';
+            }
+            
+            // 辅助函数：格式化XML
+            function formatXml(xml) {
+                const PADDING = '  ';
+                const reg = /(>)(<)(\/*)/g;
+                let formatted = '';
+                let pad = 0;
+                
+                xml = xml.replace(reg, '$1\r\n$2$3');
+                
+                xml.split('\r\n').forEach(node => {
+                    let indent = 0;
+                    if (node.match(/.+<\/\w[^>]*>$/)) {
+                        indent = 0;
+                    } else if (node.match(/^<\/\w/)) {
+                        if (pad !== 0) pad -= 1;
+                    } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+                        indent = 1;
+                    } else {
+                        indent = 0;
+                    }
+                    
+                    let padding = '';
+                    for (let i = 0; i < pad; i++) {
+                        padding += PADDING;
+                    }
+                    
+                    formatted += padding + node + '\r\n';
+                    pad += indent;
+                });
+                
+                return formatted;
+            }
+            
+            // 显示错误
+            function showError(message) {
+                errorMsg.textContent = message;
+                errorMsg.style.display = 'block';
+            }
+            
+            // 隐藏错误
+            function hideError() {
+                errorMsg.style.display = 'none';
+            }
+            
+            // 显示成功
+            function showSuccess(message) {
+                successMsg.textContent = message;
+                successMsg.style.display = 'block';
+            }
+            
+            // 隐藏成功
+            function hideSuccess() {
+                successMsg.style.display = 'none';
+            }
+            
+            // 复制按钮点击事件
+            copyBtn.addEventListener('click', function() {
+                const textToCopy = dataDisplay.textContent;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(textToCopy).then(function() {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '已复制！';
+                        setTimeout(function() {
+                            copyBtn.textContent = originalText;
+                        }, 2000);
+                    }).catch(function(err) {
+                        fallbackCopyTextToClipboard(textToCopy);
+                    });
+                } else {
+                    fallbackCopyTextToClipboard(textToCopy);
+                }
+            });
+            
+            // 备用复制方法
+            function fallbackCopyTextToClipboard(text) {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
+                textArea.style.opacity = "0";
+                
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '已复制！';
+                    setTimeout(function() {
+                        copyBtn.textContent = originalText;
+                    }, 2000);
+                } catch (err) {
+                    alert('复制失败，请手动选择复制');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+        });
+    </script>
 </body>
 </html>
