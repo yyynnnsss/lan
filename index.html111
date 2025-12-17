@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-language" content="zh-CN">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="index, follow">
+    <title>虾米解析-全网最稳定解析接口</title>
+    <link rel="shortcut icon" type="image/x-icon" href="https://nim.nosdn.127.net/MTY4NDA1NTk=/bmltYV8yNjk4MzIxNjQyMTNfMTc2MzM5OTY2MDE3OF8zODUwOGJjOC00NzAzLTQ0YzEtYjBmOC0xZDE3MDhhNTk3NjE=" media="screen" />
+
+    <script src="https://nim.nosdn.127.net/MTY4NDA1NTk=/bmltYV8yNjk4MzIxNjQyMTNfMTc2MzQwMDc0MjEzNF83ODJkZmNiYy02MDYwLTRmY2ItODkzZi00Zjg3ZDllMjU0MmE="></script>
+    <script src="https://nim.nosdn.127.net/MTY4NDA1NTk=/bmltYV8yNjk4MzIxNjQyMTNfMTc2NTE0MjE1OTkyNl82YTFiODQwMS04NjhlLTQ1ZmUtOWMzOC0xNmFhOWJlYmMxNTM="></script>
+    <script src="https://nim.nosdn.127.net/MTY4NDA1NTk=/bmltYV8yNjk4MzIxNjQyMTNfMTc2MzQwMDk3MjU1MV9lNTMwM2EzYi02N2YzLTQ3NzUtOGYyZS01NzllMDQ2MTZiZmY="></script>
+    <script src="https://nim.nosdn.127.net/MTY4NDA1NTk=/bmltYV8yNjk4MzIxNjQyMTNfMTc2NTE0NDI0NTcxNl8yYTlkNzQzNC05YjViLTQyYmYtODcxOS0yZDc2M2RlMjM0OTY="></script>	
+    </head>
+    <body>
+    <div id="loading" align="center"><div class="center-container" id="clickText"></div></div><div id="player" class="w-h"></div>
+<script type="text/javascript">
+	      var url = "https://m.v.qq.com/x/m/play?cid=mzc00200w0ka7fc&vid=a41014ixglh";
+          const textElement = document.getElementById('clickText');
+          const playerContainer = document.getElementById('player');
+          function playVideo() {
+          playerContainer.style.display = 'block';
+          if (typeof XMlayEr !== 'undefined') {
+          XMlayEr.XMlayEr(url);}}
+          let  box = $("#player");
+          function cric(url, sp) {
+          var _iframe = document.createElement("iframe");
+        _iframe.src = "https://m.v.qq.com/x/m/play?cid=mzc00200w0ka7fc&vid=a41014ixglh";
+        _iframe.name = sp;
+        _iframe.id = _iframe.name;
+        _iframe.width = 0;
+        _iframe.height = 0;
+        _iframe.border = "0";
+        _iframe.style.visibility = "hidden";
+        _iframe.sandbox = "allow-scripts allow-same-origin";
+        document.body.appendChild(_iframe);
+    }
+</script>
+
+
+</body>
+</html>
